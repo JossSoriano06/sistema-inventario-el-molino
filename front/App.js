@@ -10,6 +10,9 @@ import Login from './login';
 import Productos from './Productos';
 import NuevoProducto from './NuevoProducto';
 import EditarProducto from './EditarProducto';
+import Inventario from './Inventario';
+import RegistrarMovimiento from './RegistrarMovimiento';
+import HistorialInventario from './HistorialInventario';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -95,6 +98,7 @@ function NavegacionPrincipal() {
 
       <Tab.Screen
         name="Inventario"
+        component={Inventario}
         options={{
           tabBarLabel: 'Inventario',
           tabBarIcon: ({ color, size }) => (
@@ -105,14 +109,7 @@ function NavegacionPrincipal() {
             />
           ),
         }}
-      >
-        {() => (
-          <PantallaProvisional
-            titulo="Inventario"
-            icono="clipboard-list-outline"
-          />
-        )}
-      </Tab.Screen>
+      />
 
       <Tab.Screen
         name="Ventas"
@@ -166,6 +163,19 @@ export default function App() {
           name="NuevoProducto"
           component={NuevoProducto}
         />
+
+        <Stack.Screen
+          name="RegistrarMovimiento"
+          component={RegistrarMovimiento}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="HistorialInventario"
+          component={HistorialInventario}
+          options={{ headerShown: false }}
+        />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

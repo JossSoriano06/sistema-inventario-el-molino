@@ -1,0 +1,19 @@
+# React Native / Expo
+front/node_modules/
+front/.expo/
+front/dist/
+front/web-build/
+
+# Java / Maven
+back/**/target/
+back/**/*.class
+
+# VS Code y sistema operativo
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Archivos de entorno y credenciales
+.env
+.env.*
+!.env.example

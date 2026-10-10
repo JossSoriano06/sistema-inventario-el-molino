@@ -44,6 +44,33 @@ export default function Productos({ navigation }) {
       .includes(buscar.toLowerCase())
   );
 
+  const obtenerIconoProducto = (producto) => {
+  const texto = `${producto.nombre || ''} ${producto.categoria || ''}`
+    .toLowerCase();
+
+  if (texto.includes('cheesecake') || texto.includes('queso')) {
+    return 'cake-variant';
+  }
+
+  if (texto.includes('galleta') || texto.includes('chispas')) {
+    return 'cookie';
+  }
+
+  if (texto.includes('torta') || texto.includes('pastel')) {
+    return 'cake';
+  }
+
+  if (texto.includes('pan')) {
+    return 'bread-slice';
+  }
+
+  if (texto.includes('cupcake') || texto.includes('muffin')) {
+    return 'cupcake';
+  }
+
+  return 'food';
+};
+
 
 
 //accion de editar y eliminar producto
@@ -117,7 +144,7 @@ function confirmarEliminacion(producto) {
 
         <View style={styles.imagenProducto}>
           <MaterialCommunityIcons
-            name={item.icono}
+            name={obtenerIconoProducto(item)}
             size={38}
             color="#8B4A2B"
           />

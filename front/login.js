@@ -66,7 +66,7 @@ export default function Login({ navigation }) {
 
       <TouchableOpacity
       style={styles.boton}
-      onPress={() => navigation.navigate('Productos')}
+      onPress={() => navigation.navigate('Principal')}
       >
       <Text style={styles.botonTexto}>
         Iniciar sesión

@@ -14,7 +14,7 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { registrarProducto } from './service/productoService';
+import { registrarProducto } from '../../services/productoService';
 
 export default function NuevoProducto({ navigation }) {
   const [nombre, setNombre] = useState('');

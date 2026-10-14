@@ -1,13 +1,37 @@
 import React, { useState } from 'react';
-import {View,Text,TextInput,TouchableOpacity,StyleSheet,} from 'react-native';
+import {View,Text,TextInput,TouchableOpacity,StyleSheet,ActivityIndicator,} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-export default function Login({ navigation }) {
+import { useAuth } from '../../context/AuthContext';
+
+export default function Login() {
+  const { login, aviso } = useAuth();
+
   const [usuario, setUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [mostrarPass, setMostrarPass] = useState(false);
   const [recordarme, setRecordarme] = useState(true);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
+
+  async function manejarLogin() {
+    if (!usuario.trim() || !contrasena) {
+      setError('Ingresa tu usuario y contraseña.');
+      return;
+    }
+
+    setError('');
+    setCargando(true);
+
+    try {
+      await login(usuario, contrasena, recordarme);
+      // al iniciar sesión, la navegación cambia sola a la pantalla principal
+    } catch (e) {
+      setError(e.message);
+      setCargando(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -30,6 +54,7 @@ export default function Login({ navigation }) {
           value={usuario}
           onChangeText={setUsuario}
           autoCapitalize="none"
+          editable={!cargando}
         />
       </View>
 
@@ -42,6 +67,7 @@ export default function Login({ navigation }) {
           value={contrasena}
           onChangeText={setContrasena}
           secureTextEntry={!mostrarPass}
+          editable={!cargando}
         />
         <TouchableOpacity onPress={() => setMostrarPass(!mostrarPass)}>
           <Ionicons
@@ -64,14 +90,21 @@ export default function Login({ navigation }) {
         <Text style={styles.recordarmeTexto}>Recordarme</Text>
       </TouchableOpacity>
 
+      {(error || aviso) ? (
+        <Text style={styles.error}>{error || aviso}</Text>
+      ) : null}
+
       <TouchableOpacity
-      style={styles.boton}
-      onPress={() => navigation.navigate('Principal')}
+        style={[styles.boton, cargando && styles.botonDeshabilitado]}
+        onPress={manejarLogin}
+        disabled={cargando}
       >
-      <Text style={styles.botonTexto}>
-        Iniciar sesión
-      </Text>
-    </TouchableOpacity>
+        {cargando ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.botonTexto}>Iniciar sesión</Text>
+        )}
+      </TouchableOpacity>
 
       <TouchableOpacity>
         <Text style={styles.link}>¿Olvidaste tu contraseña?</Text>
@@ -147,6 +180,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  error: {
+    color: '#B3261E',
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  botonDeshabilitado: {
+    opacity: 0.7,
   },
   link: {
     color: '#8B5E3C',

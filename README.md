@@ -23,23 +23,21 @@ El proyecto está dividido en dos partes:
 - Expo Go en el celular, o un emulador de Android / iOS
   
 ## Estructura del proyecto
-
-sistema-inventario-el-molino/
-├── back/demo/demo/                  Backend Spring Boot
-│   └── src/elmolino/
-│       ├── config/                  Seguridad, JWT y usuario inicial
-│       ├── controller/              Auth, Productos, Inventario
-│       ├── dto/                     Objetos de solicitud y respuesta
-│       ├── entity/                  Producto, MovimientoInventario, Usuario, Rol
-│       ├── repository/              Repositorios JPA
-│       └── service/                 Lógica de negocio (Auth, Jwt, Inventario)
-└── front/                           App Expo / React Native
-    └── src/
-        ├── components/
-        ├── context/                 AuthContext (sesión)
-        ├── navigation/              Stack y Tabs
-        ├── screens/                 auth, productos, inventario
-        └── services/                Cliente HTTP y servicios de la API
+Back
+src/elmolino/
+    config/                  Seguridad, JWT y usuario inicial
+    controller/              Auth, Productos, Inventario
+    dto/                     Objetos de solicitud y respuesta
+    entity/                  Producto, MovimientoInventario, Usuario, Rol
+    repository/              Repositorios JPA
+    service/                 Lógica de negocio (Auth, Jwt, Inventario)
+front/                           App Expo / React Native
+    src/
+      components/
+          context/                 AuthContext (sesión)
+          navigation/              Stack y Tabs
+          screens/                 auth, productos, inventario
+          services/                Cliente HTTP y servicios de la API
 
 ## Base de datos
 

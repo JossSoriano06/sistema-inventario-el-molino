@@ -13,6 +13,8 @@ import EditarProducto from './EditarProducto';
 import Inventario from './Inventario';
 import RegistrarMovimiento from './RegistrarMovimiento';
 import HistorialInventario from './HistorialInventario';
+import Ventas from './Ventas';
+import HistorialVentas from './HistorialVentas';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -113,6 +115,7 @@ function NavegacionPrincipal() {
 
       <Tab.Screen
         name="Ventas"
+        component={Ventas}
         options={{
           tabBarLabel: 'Ventas',
           tabBarIcon: ({ color, size }) => (
@@ -123,14 +126,8 @@ function NavegacionPrincipal() {
             />
           ),
         }}
-      >
-        {() => (
-          <PantallaProvisional
-            titulo="Ventas"
-            icono="cart-outline"
-          />
-        )}
-      </Tab.Screen>
+      />
+
     </Tab.Navigator>
   );
 }
@@ -173,6 +170,12 @@ export default function App() {
         <Stack.Screen
           name="HistorialInventario"
           component={HistorialInventario}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="HistorialVentas"
+          component={HistorialVentas}
           options={{ headerShown: false }}
         />
 

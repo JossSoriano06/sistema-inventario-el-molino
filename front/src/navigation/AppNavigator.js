@@ -9,6 +9,7 @@ import NuevoProducto from '../screens/productos/NuevoProducto';
 import EditarProducto from '../screens/productos/EditarProducto';
 import RegistrarMovimiento from '../screens/inventario/RegistrarMovimiento';
 import HistorialInventario from '../screens/inventario/HistorialInventario';
+import HistorialVentas from '../screens/ventas/HistorialVentas';
 
 const Stack = createNativeStackNavigator();
 
@@ -46,6 +47,10 @@ export default function AppNavigator() {
           <Stack.Screen
             name="HistorialInventario"
             component={HistorialInventario}
+          />
+          <Stack.Screen
+            name="HistorialVentas"
+            component={HistorialVentas}
           />
         </>
       ) : (

@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PantallaProvisional from '../components/PantallaProvisional';
 import Productos from '../screens/productos/Productos';
 import Inventario from '../screens/inventario/Inventario';
+import Ventas from '../screens/ventas/Ventas';
 
 const Tab = createBottomTabNavigator();
 
@@ -83,8 +84,9 @@ export default function TabsPrincipal() {
         }}
       />
 
-      <Tab.Screen
+       <Tab.Screen
         name="Ventas"
+        component={Ventas}
         options={{
           tabBarLabel: 'Ventas',
           tabBarIcon: ({ color, size }) => (
@@ -95,14 +97,8 @@ export default function TabsPrincipal() {
             />
           ),
         }}
-      >
-        {() => (
-          <PantallaProvisional
-            titulo="Ventas"
-            icono="cart-outline"
-          />
-        )}
-      </Tab.Screen>
+      />
+      
     </Tab.Navigator>
   );
 }

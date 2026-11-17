@@ -1,7 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-
 import { NavigationContainer } from '@react-navigation/native';
+
+
+import { AuthProvider } from './src/context/AuthContext';
+import AppNavigator from './src/navigation/AppNavigator';
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <AppNavigator />
+      </NavigationContainer>
+    </AuthProvider>
+
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -181,27 +192,6 @@ export default function App() {
 
       </Stack.Navigator>
     </NavigationContainer>
+ 
   );
 }
-
-const styles = StyleSheet.create({
-  provisional: {
-    flex: 1,
-    backgroundColor: '#FDF6F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  tituloProvisional: {
-    fontSize: 23,
-    fontWeight: 'bold',
-    color: '#8B4A2B',
-    marginTop: 16,
-  },
-  descripcion: {
-    color: '#89796D',
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-});

@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const API_URL = 'http://10.0.2.2:8080/api';
+import { obtenerProductos } from '../../services/productoService';
+import { registrarMovimiento } from '../../services/inventarioService';
 
 export default function RegistrarMovimiento({ route, navigation }) {
   const productoInicial = route.params?.producto;
@@ -29,13 +30,7 @@ export default function RegistrarMovimiento({ route, navigation }) {
   useEffect(() => {
     async function cargarProductos() {
       try {
-        const respuesta = await fetch(`${API_URL}/productos`);
-
-        if (!respuesta.ok) {
-          throw new Error('No se pudieron cargar los productos');
-        }
-
-        const datos = await respuesta.json();
+        const datos = await obtenerProductos();
         setProductos(datos);
       } catch (error) {
         Alert.alert(
@@ -94,26 +89,12 @@ export default function RegistrarMovimiento({ route, navigation }) {
     setGuardando(true);
 
     try {
-      const respuesta = await fetch(`${API_URL}/inventario`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productoId: Number(productoId),
-          tipo,
-          cantidad: cantidadNumero,
-          motivo: motivo.trim(),
-        }),
+      await registrarMovimiento({
+        productoId: Number(productoId),
+        tipo,
+        cantidad: cantidadNumero,
+        motivo: motivo.trim(),
       });
-
-      const datos = await respuesta.json().catch(() => ({}));
-
-      if (!respuesta.ok) {
-        throw new Error(
-          datos.mensaje || 'No se pudo registrar el movimiento.'
-        );
-      }
 
       Alert.alert(
         'Movimiento registrado',

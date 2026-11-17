@@ -1,9 +1,8 @@
-
-const API_URL = 'http://10.0.2.2:8080/api/productos';
+import { apiFetch } from './api';
 
 // Obtener todos los productos
 export async function obtenerProductos() {
-  const respuesta = await fetch(API_URL);
+  const respuesta = await apiFetch('/productos');
 
   if (!respuesta.ok) {
     throw new Error('No se pudieron cargar los productos');
@@ -14,11 +13,8 @@ export async function obtenerProductos() {
 
 // Registrar un producto
 export async function registrarProducto(producto) {
-  const respuesta = await fetch(API_URL, {
+  const respuesta = await apiFetch('/productos', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(producto),
   });
 
@@ -31,11 +27,8 @@ export async function registrarProducto(producto) {
 
 // Actualizar un producto existente
 export async function actualizarProducto(id, producto) {
-  const respuesta = await fetch(`${API_URL}/${id}`, {
+  const respuesta = await apiFetch(`/productos/${id}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(producto),
   });
 
@@ -48,7 +41,7 @@ export async function actualizarProducto(id, producto) {
 
 // Eliminar un producto
 export async function eliminarProducto(id) {
-  const respuesta = await fetch(`${API_URL}/${id}`, {
+  const respuesta = await apiFetch(`/productos/${id}`, {
     method: 'DELETE',
   });
 

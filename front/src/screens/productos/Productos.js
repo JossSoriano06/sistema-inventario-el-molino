@@ -7,10 +7,12 @@ import {
   MaterialCommunityIcons,
 } from '@expo/vector-icons';
 
-import {obtenerProductos, actualizarProducto, eliminarProducto} from './service/productoService';
+import {obtenerProductos, actualizarProducto, eliminarProducto} from '../../services/productoService';
+import { useAuth } from '../../context/AuthContext';
 
 
 export default function Productos({ navigation }) {
+  const { logout } = useAuth();
   const [buscar, setBuscar] = useState('');
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -194,7 +196,7 @@ function confirmarEliminacion(producto) {
 
       <TouchableOpacity
         style={styles.botonCerrar}
-        onPress={() => navigation.navigate('Login')}
+        onPress={logout}
         activeOpacity={0.7}
       >
         <Ionicons

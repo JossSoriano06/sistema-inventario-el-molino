@@ -12,7 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const API_URL = 'http://10.0.2.2:8080/api';
+import { obtenerProductos } from '../../services/productoService';
 
 export default function Inventario({ navigation }) {
   const [productos, setProductos] = useState([]);
@@ -24,13 +24,7 @@ export default function Inventario({ navigation }) {
     try {
       setError('');
 
-      const respuesta = await fetch(`${API_URL}/productos`);
-
-      if (!respuesta.ok) {
-        throw new Error('No se pudo consultar el inventario');
-      }
-
-      const datos = await respuesta.json();
+      const datos = await obtenerProductos();
       setProductos(datos);
     } catch (e) {
       setError('No se pudo conectar con el servidor.');

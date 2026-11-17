@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { actualizarProducto } from './service/productoService';
+import { actualizarProducto } from '../../services/productoService';
 
 export default function EditarProducto({ navigation, route }) {
   const producto = route.params?.producto;

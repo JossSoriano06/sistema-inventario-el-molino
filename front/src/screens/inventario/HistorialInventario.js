@@ -12,7 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const API_URL = 'http://10.0.2.2:8080/api';
+import { obtenerMovimientos } from '../../services/inventarioService';
 
 export default function HistorialInventario({ navigation }) {
   const [movimientos, setMovimientos] = useState([]);
@@ -22,13 +22,7 @@ export default function HistorialInventario({ navigation }) {
 
   const cargarMovimientos = async () => {
     try {
-      const respuesta = await fetch(`${API_URL}/inventario`);
-
-      if (!respuesta.ok) {
-        throw new Error('No se pudo obtener el historial.');
-      }
-
-      const datos = await respuesta.json();
+      const datos = await obtenerMovimientos();
       setMovimientos(datos);
     } catch (error) {
       Alert.alert(

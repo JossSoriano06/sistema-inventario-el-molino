@@ -1,0 +1,91 @@
+
+package com.elmolino.demo.entity;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "ventas")
+public class Venta {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal total;
+
+    @Column(nullable = false)
+    private LocalDateTime fecha;
+
+    @JsonManagedReference
+    @OneToMany(
+        mappedBy = "venta",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true,
+        fetch = FetchType.EAGER
+    )
+    private List<DetalleVenta> detalles = new ArrayList<>();
+
+    public Venta() {
+    }
+
+    @PrePersist
+    public void antesDeGuardar() {
+        if (fecha == null) {
+            fecha = LocalDateTime.now();
+        }
+    }
+
+    public void agregarDetalle(DetalleVenta detalle) {
+        detalles.add(detalle);
+        detalle.setVenta(this);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public BigDecimal getTotal() {
+        return total;
+    }
+
+    public void setTotal(BigDecimal total) {
+        this.total = total;
+    }
+
+    public LocalDateTime getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDateTime fecha) {
+        this.fecha = fecha;
+    }
+
+    public List<DetalleVenta> getDetalles() {
+        return detalles;
+    }
+
+    public void setDetalles(List<DetalleVenta> detalles) {
+        this.detalles = detalles;
+    }
+}

@@ -1,3 +1,4 @@
+
 package com.elmolino.demo.service;
 
 import java.math.BigDecimal;
@@ -42,106 +43,106 @@ public class VentaService {
         if (solicitud == null
                 || solicitud.getDetalles() == null
                 || solicitud.getDetalles().isEmpty()) {
+
             throw new IllegalArgumentException(
-                "La venta debe contener al menos un producto."
+                "La venta debe contener al menos un producto"
             );
         }
 
+        Set<Long> productosRepetidos = new HashSet<>();
+
         Venta venta = new Venta();
         BigDecimal total = BigDecimal.ZERO;
-        Set<Long> productosIncluidos = new HashSet<>();
 
-        for (DetalleVentaSolicitud item : solicitud.getDetalles()) {
+        for (DetalleVentaSolicitud linea : solicitud.getDetalles()) {
 
-            if (item.getProductoId() == null) {
+            if (linea == null || linea.getProductoId() == null) {
                 throw new IllegalArgumentException(
-                    "Todos los productos deben tener un identificador."
+                    "Cada detalle debe indicar un producto"
                 );
             }
 
-            if (item.getCantidad() == null || item.getCantidad() <= 0) {
+            if (linea.getCantidad() == null
+                    || linea.getCantidad() <= 0) {
+
                 throw new IllegalArgumentException(
-                    "La cantidad debe ser mayor que cero."
+                    "La cantidad debe ser mayor que cero"
                 );
             }
 
-            if (!productosIncluidos.add(item.getProductoId())) {
+            if (!productosRepetidos.add(linea.getProductoId())) {
                 throw new IllegalArgumentException(
-                    "No repitas un producto en la venta. "
-                    + "Suma sus cantidades en un solo detalle."
+                    "No repitas un producto; actualiza su cantidad en una sola línea"
                 );
             }
 
             Producto producto = productoRepository
-                .findById(item.getProductoId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                    "No existe el producto con ID "
-                    + item.getProductoId()
-                ));
+                .findById(linea.getProductoId())
+                .orElseThrow(() ->
+                    new IllegalArgumentException(
+                        "No existe el producto con ID "
+                            + linea.getProductoId()
+                    )
+                );
 
-            if (producto.getStock() < item.getCantidad()) {
+            int stockAnterior = producto.getStock();
+
+            if (linea.getCantidad() > stockAnterior) {
                 throw new IllegalArgumentException(
-                    "Stock insuficiente para el producto: "
-                    + producto.getNombre()
+                    "Stock insuficiente para "
+                        + producto.getNombre()
+                        + ". Disponible: "
+                        + stockAnterior
                 );
             }
 
+            // Obtener el precio real del producto desde la base de datos.
             BigDecimal precio = producto.getPrecio();
 
-            if (precio == null || precio.signum() <= 0) {
-                throw new IllegalArgumentException(
-                    "El producto tiene un precio no válido."
-                );
-            }
-
+            // Calcular el subtotal de esta línea.
             BigDecimal subtotal = precio.multiply(
-                BigDecimal.valueOf(item.getCantidad())
+                BigDecimal.valueOf(linea.getCantidad())
             );
 
+            total = total.add(subtotal);
+
+            // Crear el detalle de la venta.
             DetalleVenta detalle = new DetalleVenta();
+
             detalle.setProducto(producto);
-            detalle.setCantidad(item.getCantidad());
+            detalle.setCantidad(linea.getCantidad());
             detalle.setPrecioUnitario(precio);
             detalle.setSubtotal(subtotal);
 
             venta.agregarDetalle(detalle);
-            total = total.add(subtotal);
-        }
 
-        venta.setTotal(total);
-        venta.setFecha(LocalDateTime.now());
+            // Descontar las unidades vendidas.
+            producto.setStock(
+                stockAnterior - linea.getCantidad()
+            );
 
-        // Guarda la venta y sus detalles.
-        Venta ventaGuardada = ventaRepository.save(venta);
-
-        // Actualiza el inventario y registra cada salida.
-        for (DetalleVenta detalle : ventaGuardada.getDetalles()) {
-
-            Producto producto = detalle.getProducto();
-            int stockAnterior = producto.getStock();
-            int cantidadVendida = detalle.getCantidad();
-            int stockNuevo = stockAnterior - cantidadVendida;
-
-            producto.setStock(stockNuevo);
             productoRepository.save(producto);
 
+            // Registrar la salida en el historial de inventario.
             MovimientoInventario movimiento =
                 new MovimientoInventario();
 
             movimiento.setProducto(producto);
             movimiento.setTipo("SALIDA");
-            movimiento.setCantidad(cantidadVendida);
+            movimiento.setCantidad(linea.getCantidad());
             movimiento.setStockAnterior(stockAnterior);
-            movimiento.setStockNuevo(stockNuevo);
-            movimiento.setMotivo(
-                "Venta #" + ventaGuardada.getId()
-            );
+            movimiento.setStockNuevo(producto.getStock());
+            movimiento.setMotivo("Venta registrada");
             movimiento.setFecha(LocalDateTime.now());
 
             movimientoRepository.save(movimiento);
         }
 
-        return ventaGuardada;
+        // Guardar el total de la operación.
+        venta.setTotal(total);
+
+        // CascadeType.ALL guarda también los detalles.
+        return ventaRepository.save(venta);
     }
 
     @Transactional(readOnly = true)
@@ -152,8 +153,10 @@ public class VentaService {
     @Transactional(readOnly = true)
     public Venta obtenerVenta(Long id) {
         return ventaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException(
-                "No existe la venta con ID " + id
-            ));
+            .orElseThrow(() ->
+                new IllegalArgumentException(
+                    "No existe la venta con ID " + id
+                )
+            );
     }
 }

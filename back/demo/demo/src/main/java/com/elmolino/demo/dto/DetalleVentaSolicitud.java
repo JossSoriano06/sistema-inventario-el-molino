@@ -1,12 +1,17 @@
+
 package com.elmolino.demo.dto;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 public class DetalleVentaSolicitud {
 
+    @NotNull(message = "El producto es obligatorio")
     private Long productoId;
-    private Integer cantidad;
 
-    public DetalleVentaSolicitud() {
-    }
+    @NotNull(message = "La cantidad es obligatoria")
+    @Min(value = 1, message = "La cantidad debe ser mayor que cero")
+    private Integer cantidad;
 
     public Long getProductoId() {
         return productoId;

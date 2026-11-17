@@ -1,3 +1,4 @@
+
 package com.elmolino.demo.entity;
 
 import java.math.BigDecimal;
@@ -5,11 +6,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,25 +27,26 @@ public class Venta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal total = BigDecimal.ZERO;
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal total;
 
     @Column(nullable = false)
     private LocalDateTime fecha;
 
+    @JsonManagedReference
     @OneToMany(
         mappedBy = "venta",
         cascade = CascadeType.ALL,
-        orphanRemoval = true
+        orphanRemoval = true,
+        fetch = FetchType.EAGER
     )
-    @JsonIgnoreProperties("venta")
     private List<DetalleVenta> detalles = new ArrayList<>();
 
     public Venta() {
     }
 
     @PrePersist
-    public void prepararFecha() {
+    public void antesDeGuardar() {
         if (fecha == null) {
             fecha = LocalDateTime.now();
         }

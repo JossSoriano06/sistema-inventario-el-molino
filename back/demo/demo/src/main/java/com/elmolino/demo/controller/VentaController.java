@@ -1,3 +1,4 @@
+
 package com.elmolino.demo.controller;
 
 import java.util.List;
@@ -53,7 +54,8 @@ public class VentaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> obtenerVenta(@PathVariable Long id) {
+    public ResponseEntity<?> obtenerVenta(
+            @PathVariable Long id) {
 
         try {
             return ResponseEntity.ok(
@@ -68,3 +70,4 @@ public class VentaController {
         }
     }
 }
+

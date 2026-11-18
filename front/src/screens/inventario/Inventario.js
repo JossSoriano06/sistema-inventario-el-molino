@@ -14,6 +14,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { obtenerProductos } from '../../services/productoService';
 
+import ImagenProducto from '../../components/ImagenProducto';
+
 export default function Inventario({ navigation }) {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -51,13 +53,12 @@ export default function Inventario({ navigation }) {
 
     return (
       <View style={styles.tarjeta}>
-        <View style={styles.iconoProducto}>
-          <MaterialCommunityIcons
-            name="package-variant-closed"
-            size={29}
-            color="#8B4A2B"
-          />
-        </View>
+        <ImagenProducto
+          imagenUrl={item.imagenUrl}
+          ancho={54}
+          alto={58}
+          icono="package-variant-closed"
+        />
 
         <View style={styles.datosProducto}>
           <Text style={styles.nombre} numberOfLines={2}>
@@ -322,6 +323,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   datosProducto: {
+    marginLeft: 20,
     flex: 1,
   },
   nombre: {

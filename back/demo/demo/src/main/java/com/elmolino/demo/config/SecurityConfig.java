@@ -67,6 +67,8 @@ public class SecurityConfig {
                 // Dashboard exclusivo del administrador
                 .requestMatchers("/api/dashboard/**")
                 .hasRole("ADMIN")
+                 // Endpoint de imágenes públicas sin jwt   
+                .requestMatchers("/uploads/productos/**").permitAll()
 
                 // Otros endpoints requieren JWT
                 .anyRequest().authenticated()

@@ -1,3 +1,4 @@
+
 package com.elmolino.demo.config;
 
 import org.springframework.context.annotation.Bean;
@@ -20,32 +21,64 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // Convierte el claim "rol" del token (ADMIN / EMPLEADO) en ROLE_ADMIN / ROLE_EMPLEADO
+    // Convierte el rol del JWT a una autoridad de Spring Security
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter roles = new JwtGrantedAuthoritiesConverter();
+
+        JwtGrantedAuthoritiesConverter roles =
+                new JwtGrantedAuthoritiesConverter();
+
         roles.setAuthoritiesClaimName("rol");
         roles.setAuthorityPrefix("ROLE_");
 
-        JwtAuthenticationConverter convertidor = new JwtAuthenticationConverter();
+        JwtAuthenticationConverter convertidor =
+                new JwtAuthenticationConverter();
+
         convertidor.setJwtGrantedAuthoritiesConverter(roles);
+
         return convertidor;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http)
+            throws Exception {
+
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth -> oauth
-                        .jwt(jwt -> jwt
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter())));
+            .csrf(csrf -> csrf.disable())
+
+            .cors(Customizer.withDefaults())
+
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(
+                    SessionCreationPolicy.STATELESS
+                )
+            )
+
+            .authorizeHttpRequests(auth -> auth
+
+                // Autenticación pública
+                .requestMatchers("/api/auth/**").permitAll()
+
+                // Solicitudes preflight
+                .requestMatchers(
+                    HttpMethod.OPTIONS, "/**"
+                ).permitAll()
+
+                // Dashboard exclusivo del administrador
+                .requestMatchers("/api/dashboard/**")
+                .hasRole("ADMIN")
+
+                // Otros endpoints requieren JWT
+                .anyRequest().authenticated()
+            )
+
+            .oauth2ResourceServer(oauth -> oauth
+                .jwt(jwt -> jwt
+                    .jwtAuthenticationConverter(
+                        jwtAuthenticationConverter()
+                    )
+                )
+            );
 
         return http.build();
     }

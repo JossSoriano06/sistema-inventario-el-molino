@@ -28,22 +28,34 @@ export default function RegistrarMovimiento({ route, navigation }) {
   const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
-    async function cargarProductos() {
-      try {
-        const datos = await obtenerProductos();
-        setProductos(datos);
-      } catch (error) {
-        Alert.alert(
-          'Error',
-          'No se pudieron cargar los productos. Verifica el servidor.'
-        );
-      } finally {
-        setCargando(false);
-      }
-    }
+  async function cargarProductos() {
+    try {
+      const datos = await obtenerProductos();
 
-    cargarProductos();
-  }, []);
+      // Si recibimos un producto desde Inventario,
+      // solamente mostramos ese producto.
+      if (productoInicial?.id) {
+        const seleccionado = datos.find(
+          (producto) => producto.id === productoInicial.id
+        );
+
+        setProductos(seleccionado ? [seleccionado] : []);
+      } else {
+        // Si no recibimos un producto, mostramos todos.
+        setProductos(datos);
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'No se pudieron cargar los productos. Verifica el servidor.'
+      );
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  cargarProductos();
+}, [productoInicial?.id]);
 
   const productoSeleccionado = productos.find(
     (producto) => String(producto.id) === productoId

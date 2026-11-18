@@ -17,6 +17,8 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { obtenerProductos } from '../../services/productoService';
 import { registrarVenta } from '../../services/ventaService';
 
+import ImagenProducto from '../../components/ImagenProducto';
+
 const COLOR = '#8B4A2B';
 const FONDO = '#FDF6F0';
 const FORMATO_MONEDA = (valor) =>
@@ -278,13 +280,12 @@ export default function Ventas({ navigation }) {
 
     return (
       <View style={styles.productoCard}>
-        <View style={styles.productoIcono}>
-          <MaterialCommunityIcons
-            name={iconoProducto(item)}
-            size={30}
-            color={COLOR}
-          />
-        </View>
+       <ImagenProducto style={styles.imagenProducto}
+          imagenUrl={item.imagenUrl}
+          ancho={54}
+          alto={54}
+          icono={iconoProducto(item)}
+        />
 
         <View style={styles.productoInfo}>
           <Text
@@ -694,7 +695,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
+  imagenProducto:{
+    marginRight: 12,
+  },
   productoInfo: {
+    marginLeft: 20,
     flex: 1,
     paddingRight: 8,
   },

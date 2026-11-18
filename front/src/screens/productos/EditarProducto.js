@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+
 import {
   View,
   Text,
@@ -7,106 +8,435 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Image,
   Alert,
   ActivityIndicator,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
-import { actualizarProducto } from '../../services/productoService';
+import * as ImagePicker from 'expo-image-picker';
+
+import {
+  actualizarProducto,
+  subirImagenProducto,
+} from '../../services/productoService';
+
+import { API_URL } from '../../services/api';
+
+// =====================================================
+// CONVERTIR LA RUTA DE IMAGEN EN URL COMPLETA
+// =====================================================
+
+function obtenerUrlImagen(imagenUrl) {
+
+  if (!imagenUrl) {
+    return null;
+  }
+
+  if (
+    imagenUrl.startsWith('http://') ||
+    imagenUrl.startsWith('https://')
+  ) {
+    return imagenUrl;
+  }
+
+  const servidor = API_URL.replace(/\/api\/?$/, '');
+
+  return `${servidor}${imagenUrl.startsWith('/') ? '' : '/'}${imagenUrl}`;
+}
+
+// =====================================================
+// PANTALLA EDITAR PRODUCTO
+// =====================================================
 
 export default function EditarProducto({ navigation, route }) {
+
   const producto = route.params?.producto;
 
-  const [nombre, setNombre] = useState(producto?.nombre ?? '');
-  const [categoria, setCategoria] = useState(producto?.categoria ?? '');
+  const [nombre, setNombre] = useState(
+    producto?.nombre ?? ''
+  );
+
+  const [categoria, setCategoria] = useState(
+    producto?.categoria ?? ''
+  );
+
   const [precio, setPrecio] = useState(
-    producto?.precio != null ? String(producto.precio) : ''
+    producto?.precio != null
+      ? String(producto.precio)
+      : ''
   );
+
   const [stock, setStock] = useState(
-    producto?.stock != null ? String(producto.stock) : ''
+    producto?.stock != null
+      ? String(producto.stock)
+      : ''
   );
+
+  // Fotografía nueva seleccionada localmente
+  const [imagenNueva, setImagenNueva] = useState(null);
+
   const [guardando, setGuardando] = useState(false);
 
+  // ===================================================
+  // SELECCIONAR IMAGEN DE GALERÍA
+  // ===================================================
+
+  async function seleccionarImagen() {
+
+    try {
+
+      const permiso =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permiso.granted) {
+
+        Alert.alert(
+          'Permiso necesario',
+          'Debes permitir el acceso a la galería.'
+        );
+
+        return;
+      }
+
+      const resultado =
+        await ImagePicker.launchImageLibraryAsync({
+
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+
+        });
+
+      if (!resultado.canceled && resultado.assets?.length > 0) {
+        setImagenNueva(resultado.assets[0].uri);
+      }
+
+    } catch (error) {
+
+      Alert.alert(
+        'Error',
+        'No se pudo abrir la galería.'
+      );
+
+      console.error(error);
+    }
+  }
+
+  // ===================================================
+  // TOMAR FOTOGRAFÍA
+  // ===================================================
+
+  async function tomarFotografia() {
+
+    try {
+
+      const permiso =
+        await ImagePicker.requestCameraPermissionsAsync();
+
+      if (!permiso.granted) {
+
+        Alert.alert(
+          'Permiso necesario',
+          'Debes permitir el acceso a la cámara.'
+        );
+
+        return;
+      }
+
+      const resultado =
+        await ImagePicker.launchCameraAsync({
+
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+
+        });
+
+      if (!resultado.canceled && resultado.assets?.length > 0) {
+        setImagenNueva(resultado.assets[0].uri);
+      }
+
+    } catch (error) {
+
+      Alert.alert(
+        'Error',
+        'No se pudo abrir la cámara.'
+      );
+
+      console.error(error);
+    }
+  }
+
+  // ===================================================
+  // OPCIONES DE FOTOGRAFÍA
+  // ===================================================
+
+  function mostrarOpcionesImagen() {
+
+    Alert.alert(
+      'Cambiar fotografía',
+      'Selecciona una opción.',
+      [
+        {
+          text: 'Tomar fotografía',
+          onPress: tomarFotografia,
+        },
+        {
+          text: 'Elegir de galería',
+          onPress: seleccionarImagen,
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+      ]
+    );
+  }
+
+  // ===================================================
+  // GUARDAR CAMBIOS
+  // ===================================================
+
   async function guardarCambios() {
+
     const precioNumero = Number(precio);
     const stockNumero = Number(stock);
 
-    if (!nombre.trim() || !categoria.trim() ||
-        precio.trim() === '' || stock.trim() === '') {
-      Alert.alert('Campos obligatorios', 'Completa todos los campos.');
+    if (
+      !nombre.trim() ||
+      !categoria.trim() ||
+      precio.trim() === '' ||
+      stock.trim() === ''
+    ) {
+
+      Alert.alert(
+        'Campos obligatorios',
+        'Completa todos los campos.'
+      );
+
       return;
     }
 
     if (!Number.isFinite(precioNumero) || precioNumero <= 0) {
-      Alert.alert('Precio inválido', 'El precio debe ser mayor que cero.');
+
+      Alert.alert(
+        'Precio inválido',
+        'El precio debe ser mayor que cero.'
+      );
+
       return;
     }
 
     if (!Number.isInteger(stockNumero) || stockNumero < 0) {
-      Alert.alert('Stock inválido', 'El stock debe ser un entero igual o mayor que cero.');
+
+      Alert.alert(
+        'Stock inválido',
+        'El stock debe ser un entero igual o mayor que cero.'
+      );
+
       return;
     }
 
     try {
+
       setGuardando(true);
 
+      // Actualizar los datos generales
       await actualizarProducto(producto.id, {
+
         nombre: nombre.trim(),
         categoria: categoria.trim(),
         precio: precioNumero,
         stock: stockNumero,
+
+        // Conservar la imagen anterior
+        // si no se seleccionó una nueva.
         imagenUrl: producto.imagenUrl ?? null,
+
       });
+
+      // Subir fotografía solamente si se seleccionó una nueva
+      if (imagenNueva) {
+
+        await subirImagenProducto(
+          producto.id,
+          imagenNueva
+        );
+
+      }
 
       Alert.alert(
         'Cambios guardados',
-        'El producto se actualizó correctamente.',
-        [{ text: 'Aceptar', onPress: () => navigation.goBack() }]
+        imagenNueva
+          ? 'El producto y su fotografía se actualizaron correctamente.'
+          : 'El producto se actualizó correctamente.',
+        [
+          {
+            text: 'Aceptar',
+            onPress: () => navigation.goBack(),
+          },
+        ]
       );
+
     } catch (error) {
+
+      console.error('Error al actualizar producto:', error);
+
       Alert.alert(
         'Error',
-        'No se pudo actualizar el producto. Verifica la conexión con el backend.'
+        error.message ||
+          'No se pudo actualizar el producto.'
       );
+
     } finally {
+
       setGuardando(false);
+
     }
   }
 
+  // ===================================================
+  // VALIDAR PRODUCTO
+  // ===================================================
+
   if (!producto) {
+
     return (
+
       <View style={styles.container}>
-        <Text style={styles.error}>No se recibió el producto que deseas editar.</Text>
+
+        <Text style={styles.error}>
+          No se recibió el producto que deseas editar.
+        </Text>
+
         <TouchableOpacity
           style={styles.boton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.textoBoton}>Volver</Text>
+
+          <Text style={styles.textoBoton}>
+            Volver
+          </Text>
+
         </TouchableOpacity>
+
       </View>
     );
   }
 
+  // Mostrar imagen nueva o imagen guardada
+  const imagenMostrar = imagenNueva
+    ? imagenNueva
+    : obtenerUrlImagen(producto.imagenUrl);
+
+  // ===================================================
+  // INTERFAZ
+  // ===================================================
+
   return (
+
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contenido}
       keyboardShouldPersistTaps="handled"
     >
+
+      {/* ENCABEZADO */}
+
       <View style={styles.header}>
+
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.volver}
         >
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color="#FFFFFF"
+          />
+
         </TouchableOpacity>
-        <Text style={styles.titulo}>Editar producto</Text>
+
+        <Text style={styles.titulo}>
+          Editar producto
+        </Text>
+
       </View>
 
       <Text style={styles.descripcion}>
         Modifica los datos del producto seleccionado.
       </Text>
 
-      <Text style={styles.etiqueta}>Nombre del producto</Text>
+      {/* FOTOGRAFÍA */}
+
+      <Text style={styles.etiqueta}>
+        Fotografía del producto
+      </Text>
+
+      <TouchableOpacity
+        style={styles.selectorImagen}
+        onPress={mostrarOpcionesImagen}
+        activeOpacity={0.8}
+      >
+
+        {imagenMostrar ? (
+
+          <Image
+            source={{ uri: imagenMostrar }}
+            style={styles.foto}
+          />
+
+        ) : (
+
+          <>
+
+            <Ionicons
+              name="camera-outline"
+              size={45}
+              color="#8B4A2B"
+            />
+
+            <Text style={styles.textoImagen}>
+              Agregar fotografía
+            </Text>
+
+            <Text style={styles.subtextoImagen}>
+              Cámara o galería
+            </Text>
+
+          </>
+
+        )}
+
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.botonCambiarImagen}
+        onPress={mostrarOpcionesImagen}
+      >
+
+        <Ionicons
+          name="camera-reverse-outline"
+          size={18}
+          color="#8B4A2B"
+        />
+
+        <Text style={styles.textoCambiarImagen}>
+          Cambiar fotografía
+        </Text>
+
+      </TouchableOpacity>
+
+      {/* NOMBRE */}
+
+      <Text style={styles.etiqueta}>
+        Nombre del producto
+      </Text>
+
       <TextInput
         style={styles.input}
         value={nombre}
@@ -115,7 +445,12 @@ export default function EditarProducto({ navigation, route }) {
         maxLength={100}
       />
 
-      <Text style={styles.etiqueta}>Categoría</Text>
+      {/* CATEGORÍA */}
+
+      <Text style={styles.etiqueta}>
+        Categoría
+      </Text>
+
       <TextInput
         style={styles.input}
         value={categoria}
@@ -124,7 +459,12 @@ export default function EditarProducto({ navigation, route }) {
         maxLength={60}
       />
 
-      <Text style={styles.etiqueta}>Precio (S/)</Text>
+      {/* PRECIO */}
+
+      <Text style={styles.etiqueta}>
+        Precio (S/)
+      </Text>
+
       <TextInput
         style={styles.input}
         value={precio}
@@ -133,7 +473,12 @@ export default function EditarProducto({ navigation, route }) {
         placeholder="Ej. 35.00"
       />
 
-      <Text style={styles.etiqueta}>Stock</Text>
+      {/* STOCK */}
+
+      <Text style={styles.etiqueta}>
+        Stock
+      </Text>
+
       <TextInput
         style={styles.input}
         value={stock}
@@ -142,32 +487,58 @@ export default function EditarProducto({ navigation, route }) {
         placeholder="Cantidad disponible"
       />
 
+      {/* GUARDAR */}
+
       <TouchableOpacity
-        style={[styles.boton, guardando && styles.deshabilitado]}
+        style={[
+          styles.boton,
+          guardando && styles.deshabilitado,
+        ]}
         onPress={guardarCambios}
         disabled={guardando}
       >
+
         {guardando ? (
+
           <ActivityIndicator color="#FFFFFF" />
+
         ) : (
+
           <>
-            <Ionicons name="save-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.textoBoton}>Guardar cambios</Text>
+            <Ionicons
+              name="save-outline"
+              size={20}
+              color="#FFFFFF"
+            />
+
+            <Text style={styles.textoBoton}>
+              Guardar cambios
+            </Text>
           </>
+
         )}
+
       </TouchableOpacity>
+
     </ScrollView>
   );
 }
 
+// =====================================================
+// ESTILOS
+// =====================================================
+
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: '#FDF6F0',
   },
+
   contenido: {
-    paddingBottom: 30,
+    paddingBottom: 35,
   },
+
   header: {
     minHeight: 65,
     backgroundColor: '#8B4A2B',
@@ -175,27 +546,78 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
   },
+
   volver: {
     padding: 8,
   },
+
   titulo: {
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: 'bold',
     marginLeft: 12,
   },
+
   descripcion: {
     marginHorizontal: 20,
     marginTop: 20,
     marginBottom: 18,
     color: '#6F5A4A',
   },
+
   etiqueta: {
     color: '#4F3424',
     fontWeight: '600',
     marginHorizontal: 20,
     marginBottom: 7,
   },
+
+  selectorImagen: {
+    height: 190,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#DCC4B0',
+    borderStyle: 'dashed',
+    borderRadius: 14,
+    backgroundColor: '#F7E9DE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+
+  foto: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+
+  textoImagen: {
+    color: '#8B4A2B',
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+
+  subtextoImagen: {
+    color: '#8B7564',
+    fontSize: 12,
+    marginTop: 4,
+  },
+
+  botonCambiarImagen: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 7,
+    marginBottom: 20,
+  },
+
+  textoCambiarImagen: {
+    color: '#8B4A2B',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+
   input: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
@@ -208,6 +630,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#4F3424',
   },
+
   boton: {
     backgroundColor: '#8B4A2B',
     marginHorizontal: 20,
@@ -219,16 +642,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+
   textoBoton: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
+
   deshabilitado: {
     opacity: 0.7,
   },
+
   error: {
     margin: 20,
     color: '#B42318',
   },
+
 });

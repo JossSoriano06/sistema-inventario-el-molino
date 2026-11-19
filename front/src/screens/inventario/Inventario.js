@@ -16,6 +16,7 @@ import { obtenerProductos } from '../../services/productoService';
 
 import ImagenProducto from '../../components/ImagenProducto';
 
+
 export default function Inventario({ navigation }) {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);

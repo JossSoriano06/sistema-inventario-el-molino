@@ -14,6 +14,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { obtenerProductos } from '../../services/productoService';
 import { registrarMovimiento } from '../../services/inventarioService';
 
+import { evaluarStockBajo } from '../../services/notificacionesService';
+
 export default function RegistrarMovimiento({ route, navigation }) {
   const productoInicial = route.params?.producto;
 
@@ -107,6 +109,18 @@ export default function RegistrarMovimiento({ route, navigation }) {
         cantidad: cantidadNumero,
         motivo: motivo.trim(),
       });
+
+      // Consultar el stock actualizado en el backend.
+      const productosActualizados = await obtenerProductos();
+
+      const productoActualizado = productosActualizados.find(
+        (producto) => String(producto.id) === productoId
+      );
+
+      // Comprobar si corresponde mostrar una alerta.
+      if (productoActualizado) {
+        await evaluarStockBajo([productoActualizado]);
+      }
 
       Alert.alert(
         'Movimiento registrado',

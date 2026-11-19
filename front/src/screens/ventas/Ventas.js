@@ -19,6 +19,8 @@ import { registrarVenta } from '../../services/ventaService';
 
 import ImagenProducto from '../../components/ImagenProducto';
 
+import { evaluarStockBajo } from '../../services/notificacionesService';
+
 const COLOR = '#8B4A2B';
 const FONDO = '#FDF6F0';
 const FORMATO_MONEDA = (valor) =>
@@ -70,6 +72,7 @@ export default function Ventas({ navigation }) {
       const lista = Array.isArray(datos) ? datos : [];
 
       setProductos(lista);
+      return lista;
 
       // Actualizar los productos del carrito con el stock más reciente.
       setCarrito((actual) =>
@@ -236,39 +239,59 @@ export default function Ventas({ navigation }) {
     );
   }
 
-  async function guardarVenta() {
-    try {
-      setProcesando(true);
+  
+async function guardarVenta() {
+  try {
+    setProcesando(true);
 
-      const resultado = await registrarVenta(
-        carrito.map((linea) => ({
-          productoId: linea.producto.id,
-          cantidad: linea.cantidad,
-        }))
+    // Guardar los IDs de los productos vendidos.
+    const idsAfectados = carrito.map(
+      (linea) => linea.producto.id
+    );
+
+    const resultado = await registrarVenta(
+      carrito.map((linea) => ({
+        productoId: linea.producto.id,
+        cantidad: linea.cantidad,
+      }))
+    );
+
+    setCarrito([]);
+
+    // Obtener el inventario actualizado.
+    const productosActualizados = await cargarProductos(true);
+
+    // Evaluar solamente los productos de esta venta.
+    if (Array.isArray(productosActualizados)) {
+      const productosAfectados = productosActualizados.filter(
+        (producto) =>
+          idsAfectados.includes(producto.id)
       );
 
-      setCarrito([]);
-
-      await cargarProductos(true);
-
-      Alert.alert(
-        'Venta registrada',
-        `La venta${
-          resultado?.id ? ` #${resultado.id}` : ''
-        } se registró correctamente. El inventario fue actualizado por el backend.`,
-        [{ text: 'Aceptar' }]
-      );
-    } catch (e) {
-      Alert.alert(
-        'No se pudo registrar',
-        e.message || 'Ocurrió un error al registrar la venta.'
-      );
-
-      await cargarProductos(true);
-    } finally {
-      setProcesando(false);
+      await evaluarStockBajo(productosAfectados);
     }
+
+    Alert.alert(
+      'Venta registrada',
+      `La venta${
+        resultado?.id ? ` #${resultado.id}` : ''
+      } se registró correctamente. El inventario fue actualizado por el backend.`,
+      [{ text: 'Aceptar' }]
+    );
+
+  } catch (e) {
+    Alert.alert(
+      'No se pudo registrar',
+      e.message || 'Ocurrió un error al registrar la venta.'
+    );
+
+    await cargarProductos(true);
+
+  } finally {
+    setProcesando(false);
   }
+}
+
 
   const renderProducto = ({ item }) => {
     const stock = Number(item.stock || 0);

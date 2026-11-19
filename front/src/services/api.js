@@ -5,8 +5,8 @@ import { Platform } from 'react-native';
 const PUERTO = 8080;
 const TIEMPO_MAXIMO_MS = 30000;
 
-// Si la detección automática falla, coloca aquí la IP de tu PC.
-const IP_MANUAL = null;
+// IP actual de tu laptop.
+const IP_MANUAL = '10.22.157.160';
 
 function obtenerHost() {
   if (IP_MANUAL) {
@@ -27,21 +27,23 @@ export const API_URL = `http://${obtenerHost()}:${PUERTO}/api`;
 
 console.log('API_URL:', API_URL);
 
-// Token JWT
+// Gestión del token JWT
 let tokenActual = null;
 let alSesionExpirada = null;
 
 export function establecerToken(token) {
   tokenActual = token;
 }
+
 export function obtenerTokenActual() {
   return tokenActual;
 }
+
 export function establecerAlSesionExpirada(funcion) {
   alSesionExpirada = funcion;
 }
 
-// Peticiones al Backend
+// Peticiones al backend
 export async function apiFetch(ruta, opciones = {}) {
   const { headers = {}, ...resto } = opciones;
 
@@ -52,12 +54,10 @@ export async function apiFetch(ruta, opciones = {}) {
     TIEMPO_MAXIMO_MS
   );
 
-  // Detectar si el cuerpo es FormData
   const esFormData =
     typeof FormData !== 'undefined' &&
     resto.body instanceof FormData;
 
-  // Preparar encabezados
   const encabezados = {
     ...(tokenActual
       ? { Authorization: `Bearer ${tokenActual}` }
@@ -65,8 +65,6 @@ export async function apiFetch(ruta, opciones = {}) {
     ...headers,
   };
 
-  // JSON necesita Content-Type.
-  // FormData debe establecerlo automáticamente React Native.
   if (!esFormData && resto.body !== undefined) {
     encabezados['Content-Type'] = 'application/json';
   }
@@ -79,20 +77,16 @@ export async function apiFetch(ruta, opciones = {}) {
       signal: controlador.signal,
       headers: encabezados,
     });
-
   } catch (error) {
-
     if (error.name === 'AbortError') {
       throw new Error('La petición tardó demasiado tiempo.');
     }
 
     throw error;
-
   } finally {
     clearTimeout(temporizador);
   }
 
-  // Sesión vencida
   if (
     respuesta.status === 401 &&
     tokenActual &&
